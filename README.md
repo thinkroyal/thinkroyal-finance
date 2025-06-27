@@ -1,2 +1,2 @@
-# my-budget-demo
+# thinkroyal-finance
 Expense analyzer
