@@ -3,6 +3,8 @@ package com.thinkroyal.finance.service;
 import com.thinkroyal.finance.dto.UserRegistrationRequest;
 import com.thinkroyal.finance.model.User;
 import com.thinkroyal.finance.repository.UserRepository;
+
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -31,5 +33,23 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
         return userRepository.save(user);
+    }
+
+    //TODO: add removeUser() to delete accounts
+
+    public User authenticateUser(String usernameOrEmail, String rawPassword) {
+
+        User user = userRepository.findByEmail(usernameOrEmail)
+            .or(() -> userRepository.findByUsername(usernameOrEmail))
+            .orElseThrow(() -> new BadCredentialsException("Invalid credentials"));
+        System.out.println("Checking password for user: " + user.getUsername());
+        System.out.println("Stored: " + user.getPassword());
+        System.out.println("Match: " + passwordEncoder.matches(rawPassword, user.getPassword()));
+
+        if (!passwordEncoder.matches(rawPassword, user.getPassword())) {
+            throw new BadCredentialsException("Invalid credentials");
+        }
+
+        return user;
     }
 }
