@@ -2,39 +2,51 @@ package com.thinkroyal.finance.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.UUID;
 
 @Component
 public class JwtUtility {
     
-    private final String jwtSecret = "!!!JWT_SECRET_DO_NOT_USE_FOR_PRODUCTION!!!";
-    private final long jwtExpirationMs = 86400000; //1 day
-    
-    private final Key key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
+    @Value("${jwt.secret}")
+    private String jwtSecret;
 
-    public String generateToken(String subject) {
+    @Value("${jwt.expiration-ms:86400000}")
+    private long jwtExpirationMs;
+    
+    private Key getSigningKey() {
+        return Keys.hmacShaKeyFor(jwtSecret.getBytes());
+    }
+
+    public String generateToken(UUID subject) {
         return Jwts.builder()
-                .setSubject(subject)
+                .setSubject(subject.toString())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
-                .signWith(key, SignatureAlgorithm.HS256)
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    public String getSubject(String token) {
-        return Jwts.parserBuilder().setSigningKey(key).build()
-                .parseClaimsJws(token).getBody().getSubject();
+    public UUID getSubject(String token) {
+        return UUID.fromString(Jwts.parserBuilder().setSigningKey(getSigningKey()).build()
+                .parseClaimsJws(token).getBody().getSubject());
     }
+
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token);
             return true;
         } catch (JwtException e) {
             return false;
         }
     }
+
 }

@@ -25,14 +25,14 @@ public class AuthenticationController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
         User user = userService.authenticateUser(request.getUsernameOrEmail(), request.getPassword());
-        String token = jwtUtility.generateToken(user.getId().toString());
+        String token = jwtUtility.generateToken(user.getId());
         return ResponseEntity.ok(new LoginResponse(token));
     }
 
     @PostMapping("/register")
     public ResponseEntity<LoginResponse> register(@RequestBody UserRegistrationRequest request) {
         User user = userService.registerUser(request);
-        String token = jwtUtility.generateToken(user.getId().toString());
+        String token = jwtUtility.generateToken(user.getId());
         return ResponseEntity.ok(new LoginResponse(token));
     }
 }
